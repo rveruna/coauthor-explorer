@@ -21,6 +21,8 @@ interface Props {
   colorOf: (node: GraphNode) => string;
   /** Where groups are pulled to, or null. */
   anchors: Map<string, { x: number; y: number }> | null;
+  /** Photo addresses by person. People without one show their initials. */
+  photos: Map<string, string>;
   reducedMotion: boolean;
   onSelect: (id: string | null) => void;
   onExpand: (id: string) => void;
@@ -28,6 +30,16 @@ interface Props {
 }
 
 const MOVE_THRESHOLD = 4;
+
+/** The photos that have finished loading, by person. */
+function loadedPhotos(photos: Map<string, string>, images: Map<string, HTMLImageElement>) {
+  const loaded = new Map<string, HTMLImageElement>();
+  for (const [id, url] of photos) {
+    const image = images.get(url);
+    if (image?.complete && image.naturalWidth > 0) loaded.set(id, image);
+  }
+  return loaded;
+}
 
 /**
  * The network as a live, draggable picture on a canvas. A picture cannot be read by a screen reader, so the same
@@ -40,6 +52,7 @@ export function GraphCanvas({
   fitKey,
   colorOf,
   anchors,
+  photos,
   reducedMotion,
   onSelect,
   onExpand,
@@ -59,10 +72,11 @@ export function GraphCanvas({
     startY: number;
     moved: boolean;
   } | null>(null);
-  const latest = useRef({ graph, selectedId, focusId, colorOf });
+  const images = useRef(new Map<string, HTMLImageElement>());
+  const latest = useRef({ graph, selectedId, focusId, colorOf, photos });
   // drawing happens outside React's render, so it reads the latest props from here
   useLayoutEffect(() => {
-    latest.current = { graph, selectedId, focusId, colorOf };
+    latest.current = { graph, selectedId, focusId, colorOf, photos };
   });
 
   const draw = useCallback(() => {
@@ -83,6 +97,7 @@ export function GraphCanvas({
       selectedId: latest.current.selectedId,
       hoverId: hoverRef.current,
       focusId: latest.current.focusId,
+      photos: loadedPhotos(latest.current.photos, images.current),
     });
   }, []);
 
@@ -134,6 +149,19 @@ export function GraphCanvas({
   useEffect(() => {
     schedule();
   }, [selectedId, focusId, colorOf, schedule]);
+
+  // fetch each photo once, and redraw when it arrives; one that fails to load is simply never drawn
+  useEffect(() => {
+    for (const url of photos.values()) {
+      if (images.current.has(url)) continue;
+      const image = new Image();
+      image.referrerPolicy = 'no-referrer';
+      image.onload = schedule;
+      image.src = url;
+      images.current.set(url, image);
+    }
+    schedule();
+  }, [photos, schedule]);
 
   // keep the canvas sharp at any size and pixel density
   useEffect(() => {

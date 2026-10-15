@@ -28,6 +28,7 @@ function setup(overrides: Partial<React.ComponentProps<typeof GraphCanvas>> = {}
     fitKey: 'a',
     colorOf: () => '#56b4e9',
     anchors: null,
+    photos: new Map<string, string>(),
     reducedMotion: true,
     onSelect: vi.fn(),
     onExpand: vi.fn(),
@@ -216,6 +217,99 @@ describe('GraphCanvas keyboard use', () => {
     fireEvent.keyDown(widget(), { key: 'ArrowLeft' });
 
     expect(props.onSelect).not.toHaveBeenCalled();
+  });
+});
+
+describe('GraphCanvas photos', () => {
+  /** A canvas that records the photos drawn on it. */
+  function recordingCanvas() {
+    const drawn: unknown[] = [];
+    const ctx = new Proxy(
+      { measureText: () => ({ width: 10 }), drawImage: (img: unknown) => drawn.push(img) } as Record<
+        string,
+        unknown
+      >,
+      {
+        get: (t, k: string) => t[k] ?? (() => undefined),
+        set: (t, k: string, v) => ((t[k] = v), true),
+      },
+    );
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(ctx as never);
+    return drawn;
+  }
+
+  /** Stands in for the browser loading pictures, so a test can decide when each one arrives. */
+  function fakeImages() {
+    const made: {
+      src: string;
+      complete: boolean;
+      naturalWidth: number;
+      naturalHeight: number;
+      onload?: () => void;
+      referrerPolicy: string;
+    }[] = [];
+    vi.stubGlobal(
+      'Image',
+      class {
+        src = '';
+        complete = false;
+        naturalWidth = 0;
+        naturalHeight = 0;
+        referrerPolicy = '';
+        onload?: () => void;
+        constructor() {
+          made.push(this);
+        }
+      },
+    );
+    return made;
+  }
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('fetches each photo once and without sending the page address', () => {
+    const made = fakeImages();
+    setup({ photos: new Map([['a', 'https://x.example/a.jpg']]) });
+
+    expect(made).toHaveLength(1);
+    expect(made[0]!.src).toBe('https://x.example/a.jpg');
+    expect(made[0]!.referrerPolicy).toBe('no-referrer');
+  });
+
+  it('does not fetch the same photo twice', () => {
+    const made = fakeImages();
+    const photos = new Map([['a', 'https://x.example/a.jpg']]);
+    const { props, rerender } = setup({ photos });
+
+    rerender(<GraphCanvas {...props} photos={new Map(photos)} />);
+
+    expect(made).toHaveLength(1);
+  });
+
+  it('draws a photo only once it has arrived', async () => {
+    const drawn = recordingCanvas();
+    const made = fakeImages();
+    setup({ photos: new Map([['a', 'https://x.example/a.jpg']]) });
+    await new Promise((r) => requestAnimationFrame(r));
+    expect(drawn).toHaveLength(0);
+
+    Object.assign(made[0]!, { complete: true, naturalWidth: 100, naturalHeight: 100 });
+    made[0]!.onload!();
+    await new Promise((r) => requestAnimationFrame(r));
+
+    expect(drawn).toHaveLength(1);
+  });
+
+  it('never draws a photo that failed to load', async () => {
+    const drawn = recordingCanvas();
+    const made = fakeImages();
+    setup({ photos: new Map([['a', 'https://x.example/a.jpg']]) });
+
+    Object.assign(made[0]!, { complete: true, naturalWidth: 0 });
+    made[0]!.onload!();
+    await new Promise((r) => requestAnimationFrame(r));
+
+    expect(drawn).toHaveLength(0);
   });
 });
 

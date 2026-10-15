@@ -1,3 +1,4 @@
+import type { Photo } from '../api/wikidata';
 import { useAuthor } from '../hooks/useNetwork';
 import type { GraphNode } from '../domain/graph';
 import { countryName } from '../domain/colors';
@@ -9,6 +10,7 @@ interface Props {
   seedId: string | null;
   seedName: string;
   works: Work[];
+  photo?: Photo;
   loaded: boolean;
   canExpand: boolean;
   onExpand: (id: string) => void;
@@ -23,6 +25,7 @@ export function DetailsPanel({
   seedId,
   seedName,
   works,
+  photo,
   loaded,
   canExpand,
   onExpand,
@@ -56,6 +59,17 @@ export function DetailsPanel({
   return (
     <section className="details" aria-labelledby="details-heading">
       <h2 id="details-heading">{node.name}</h2>
+      {photo && (
+        <figure className="portrait">
+          <img src={photo.url} alt={node.name} width={96} height={96} referrerPolicy="no-referrer" />
+          <figcaption>
+            <a href={photo.pageUrl} target="_blank" rel="noreferrer">
+              Photo from Wikimedia Commons<span className="visually-hidden"> (opens in a new tab)</span>
+            </a>
+            , whose page gives the author and licence.
+          </figcaption>
+        </figure>
+      )}
       <dl>
         {author.data?.institution && (
           <div>
