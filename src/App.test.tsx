@@ -696,6 +696,77 @@ describe('photos', () => {
   });
 });
 
+describe('illustrated avatars', () => {
+  const caption = /An illustration made from their id\. It is not their real face\./;
+
+  it('gives someone with no photo an avatar, and says plainly that it is an illustration', async () => {
+    serve(WORLD);
+    renderApp(`?a=${SEED}&sel=A2000`);
+    await loaded();
+
+    expect(await screen.findByText(caption)).toBeInTheDocument();
+    const details = screen.getByRole('region', { name: 'Person A2000' });
+    const avatar = details.querySelector('figure img')!;
+    expect(avatar.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
+    // decorative: the caption is what is announced, not a pretend photo of the person
+    expect(avatar).toHaveAttribute('alt', '');
+  });
+
+  it('gives different people different avatars, and the same person the same one each time', async () => {
+    serve(WORLD);
+    const user = userEvent.setup();
+    renderApp(`?a=${SEED}&sel=A2000`);
+    await loaded();
+    const src = async () =>
+      (await screen.findByRole('region', { name: /Person A\d+/ }))
+        .querySelector('figure img')!
+        .getAttribute('src');
+
+    const first = await src();
+    await user.click(within(row('Person A3000')).getByRole('button', { name: 'Person A3000' }));
+    await waitFor(async () => expect(await src()).not.toBe(first));
+    await user.click(within(row('Person A2000')).getByRole('button', { name: 'Person A2000' }));
+
+    await waitFor(async () => expect(await src()).toBe(first));
+  });
+
+  it('uses a real photo instead of an avatar when there is one', async () => {
+    serve(WITH_ORCID);
+    server.use(
+      http.post('https://query.wikidata.org/sparql', () =>
+        HttpResponse.json({ results: { bindings: [{ orcid: { value: ORCID_A }, image: { value: FILE } }] } }),
+      ),
+    );
+    renderApp(`?a=${SEED}&sel=${SEED}`);
+    await loaded();
+
+    expect(await screen.findByRole('img', { name: 'Person A1000' })).toBeInTheDocument();
+    expect(screen.queryByText(caption)).not.toBeInTheDocument();
+  });
+
+  it('is explained in the key and the footer, so nobody takes an illustration for a person', async () => {
+    serve(WORLD);
+    renderApp(`?a=${SEED}`);
+    await loaded();
+
+    expect(screen.getByRole('region', { name: 'Key' })).toHaveTextContent(
+      /Otherwise they are illustrations made from an id, not the person’s real face/,
+    );
+    expect(
+      screen.getByText(/illustrated avatar made from their id, which is not their real face/),
+    ).toBeInTheDocument();
+  });
+
+  it('needs no request to make them', async () => {
+    serve(WORLD);
+    renderApp(`?a=${SEED}&sel=A2000`);
+    await loaded();
+
+    // the mocked network fails any request it was not told about, so reaching here means avatars made none
+    expect(await screen.findByText(caption)).toBeInTheDocument();
+  });
+});
+
 describe('page details', () => {
   it('names the page after the researcher', async () => {
     serve(WORLD);

@@ -11,6 +11,8 @@ interface Props {
   seedName: string;
   works: Work[];
   photo?: Photo;
+  /** An illustrated avatar, for someone with no real photo. */
+  avatar?: string;
   loaded: boolean;
   canExpand: boolean;
   onExpand: (id: string) => void;
@@ -26,6 +28,7 @@ export function DetailsPanel({
   seedName,
   works,
   photo,
+  avatar,
   loaded,
   canExpand,
   onExpand,
@@ -59,7 +62,7 @@ export function DetailsPanel({
   return (
     <section className="details" aria-labelledby="details-heading">
       <h2 id="details-heading">{node.name}</h2>
-      {photo && (
+      {photo ? (
         <figure className="portrait">
           <img src={photo.url} alt={node.name} width={96} height={96} referrerPolicy="no-referrer" />
           <figcaption>
@@ -69,6 +72,13 @@ export function DetailsPanel({
             , whose page gives the author and licence.
           </figcaption>
         </figure>
+      ) : (
+        avatar && (
+          <figure className="portrait">
+            <img src={avatar} alt="" width={96} height={96} />
+            <figcaption>An illustration made from their id. It is not their real face.</figcaption>
+          </figure>
+        )
       )}
       <dl>
         {author.data?.institution && (
