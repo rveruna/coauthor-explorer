@@ -12,6 +12,7 @@ import { colorScheme } from './domain/scheme';
 import { buildGraph, yearSpan } from './domain/graph';
 import { MAX_EXPANDED } from './domain/settings';
 import { useNetwork } from './hooks/useNetwork';
+import { usePhotos } from './hooks/usePhotos';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { useSettings } from './hooks/useSettings';
 
@@ -47,6 +48,8 @@ export default function App() {
     [network.works, network.loaded, years, settings.max, settings.nodes],
   );
 
+  const photos = usePhotos(graph.nodes);
+  const photoUrls = useMemo(() => new Map([...photos].map(([id, p]) => [id, p.url])), [photos]);
   const groups = useMemo(() => findGroups(graph), [graph]);
   const scheme = useMemo(() => colorScheme(settings.color, graph, groups), [settings.color, graph, groups]);
 
@@ -150,6 +153,7 @@ export default function App() {
                       fitKey={seedId}
                       colorOf={scheme.colorOf}
                       anchors={scheme.anchors}
+                      photos={photoUrls}
                       reducedMotion={reducedMotion}
                       onSelect={(id) => update({ sel: id ?? undefined })}
                       onExpand={expand}
@@ -171,6 +175,7 @@ export default function App() {
                       seedId={seedId}
                       seedName={seedName}
                       works={network.works}
+                      photo={selectedNode ? photos.get(selectedNode.id) : undefined}
                       loaded={selectedNode ? settings.x.includes(selectedNode.id) : false}
                       canExpand={canExpand}
                       onExpand={expand}
@@ -197,10 +202,11 @@ export default function App() {
 
       <footer>
         <p>
-          Data from <a href="https://openalex.org">OpenAlex</a>, an open index of research. This is an
-          independent project, not affiliated with OpenAlex. Researchers are identified by OpenAlex’s
-          automatic author matching, which sometimes merges or splits people, so treat the network as a guide,
-          not a record.
+          Data from <a href="https://openalex.org">OpenAlex</a>, an open index of research. Photos, where
+          there is one, come from Wikimedia Commons through Wikidata and are matched by ORCID iD, never by
+          name; the rest show initials. This is an independent project, not affiliated with OpenAlex.
+          Researchers are identified by OpenAlex’s automatic author matching, which sometimes merges or splits
+          people, so treat the network as a guide, not a record.
         </p>
       </footer>
     </>

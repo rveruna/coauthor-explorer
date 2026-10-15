@@ -6,6 +6,18 @@ import { FEATURED } from './api/snapshots';
 import { server } from './test/server';
 import { renderApp, SEED, serve, WORLD } from './test/openalex';
 
+const ORCID_A = '0000-0001-9161-999X';
+const FILE = 'http://commons.wikimedia.org/wiki/Special:FilePath/Ada%20Lovelace.jpg';
+const WITH_ORCID = {
+  [SEED]: [
+    {
+      id: 'W1',
+      year: 2020,
+      authors: [[SEED, 'GB', ORCID_A] as [string, string, string], ['A2000', 'US'] as [string, string]],
+    },
+  ],
+};
+
 const loaded = () => screen.findByText(/Showing \d+ people/);
 const table = () => screen.getByRole('table');
 const row = (name: string) => within(table()).getByRole('row', { name: new RegExp(`^${name}`) });
@@ -578,6 +590,112 @@ describe('the keyboard and the picture', () => {
   });
 });
 
+describe('photos', () => {
+  const photoFor = (orcid: string) =>
+    http.post('https://query.wikidata.org/sparql', () =>
+      HttpResponse.json({ results: { bindings: [{ orcid: { value: orcid }, image: { value: FILE } }] } }),
+    );
+
+  it('shows a real photo with a credit for someone whose ORCID iD matches', async () => {
+    serve(WITH_ORCID);
+    server.use(photoFor(ORCID_A));
+    renderApp(`?a=${SEED}&sel=${SEED}`);
+    await loaded();
+
+    const portrait = await screen.findByRole('img', { name: 'Person A1000' });
+    expect(portrait).toHaveAttribute('src', expect.stringContaining('Ada%20Lovelace.jpg'));
+    const credit = screen.getByRole('link', { name: /Photo from Wikimedia Commons/ });
+    expect(credit).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:Ada%20Lovelace.jpg');
+  });
+
+  it('finds photos for several people at once, not just the first', async () => {
+    const ORCID_B = '0000-0002-1825-0097';
+    serve({
+      [SEED]: [
+        {
+          id: 'W1',
+          year: 2020,
+          authors: [
+            [SEED, 'GB', ORCID_A] as [string, string, string],
+            ['A2000', 'US', ORCID_B] as [string, string, string],
+          ],
+        },
+      ],
+    });
+    server.use(
+      http.post('https://query.wikidata.org/sparql', () =>
+        HttpResponse.json({
+          results: {
+            bindings: [
+              { orcid: { value: ORCID_A }, image: { value: FILE } },
+              { orcid: { value: ORCID_B }, image: { value: FILE.replace('Ada', 'Grace') } },
+            ],
+          },
+        }),
+      ),
+    );
+    renderApp(`?a=${SEED}&sel=A2000`);
+    await loaded();
+
+    const portrait = await screen.findByRole('img', { name: 'Person A2000' });
+    expect(portrait).toHaveAttribute('src', expect.stringContaining('Grace'));
+  });
+
+  it('shows no photo for someone who does not have one', async () => {
+    serve(WITH_ORCID);
+    renderApp(`?a=${SEED}&sel=A2000`);
+    await loaded();
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Wikimedia Commons/ })).not.toBeInTheDocument();
+  });
+
+  it('asks only for the people who have an ORCID iD, matching on it and not on a name', async () => {
+    serve(WITH_ORCID);
+    let sent = '';
+    server.use(
+      http.post('https://query.wikidata.org/sparql', async ({ request }) => {
+        sent = decodeURIComponent((await request.text()).replace(/\+/g, ' '));
+        return HttpResponse.json({ results: { bindings: [] } });
+      }),
+    );
+    renderApp(`?a=${SEED}`);
+    await loaded();
+
+    await waitFor(() => expect(sent).toContain(ORCID_A));
+    expect(sent).not.toContain('A2000');
+    expect(sent).not.toContain('Person');
+  });
+
+  it('does not ask Wikidata at all when nobody has an ORCID iD', async () => {
+    serve(WORLD);
+    const asked = vi.fn();
+    server.use(
+      http.post('https://query.wikidata.org/sparql', () => {
+        asked();
+        return HttpResponse.json({ results: { bindings: [] } });
+      }),
+    );
+    renderApp(`?a=${SEED}`);
+    await loaded();
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(asked).not.toHaveBeenCalled();
+  });
+
+  it('carries on with initials when Wikidata cannot be reached', async () => {
+    serve(WITH_ORCID);
+    server.use(http.post('https://query.wikidata.org/sparql', () => HttpResponse.error()));
+    renderApp(`?a=${SEED}&sel=${SEED}`);
+    await loaded();
+
+    await new Promise((r) => setTimeout(r, 100));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Person A1000' })).toBeInTheDocument();
+  });
+});
+
 describe('page details', () => {
   it('names the page after the researcher', async () => {
     serve(WORLD);
@@ -592,6 +710,7 @@ describe('page details', () => {
 
     expect(screen.getByRole('link', { name: 'OpenAlex' })).toHaveAttribute('href', 'https://openalex.org');
     expect(screen.getByText(/sometimes merges or splits people/)).toBeInTheDocument();
+    expect(screen.getByText(/matched by ORCID iD, never by name/)).toBeInTheDocument();
   });
 
   it('has one main landmark and one h1', async () => {

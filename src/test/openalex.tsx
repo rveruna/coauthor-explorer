@@ -9,8 +9,8 @@ export interface FakePaper {
   title?: string;
   year: number;
   citations?: number;
-  /** Author ids, or [id, country] pairs. */
-  authors: (string | [string, string])[];
+  /** Author ids, or [id, country] or [id, country, orcid] tuples. */
+  authors: (string | [string, string] | [string, string, string])[];
 }
 
 const url = (id: string) => `https://openalex.org/${id}`;
@@ -23,9 +23,13 @@ export function worksBody(papers: FakePaper[]) {
       publication_year: p.year,
       cited_by_count: p.citations ?? 0,
       authorships: p.authors.map((a) => {
-        const [id, country] = typeof a === 'string' ? [a, undefined] : a;
+        const [id, country, orcid] = typeof a === 'string' ? [a, undefined, undefined] : [a[0], a[1], a[2]];
         return {
-          author: { id: url(id), display_name: `Person ${id}`, orcid: null },
+          author: {
+            id: url(id),
+            display_name: `Person ${id}`,
+            orcid: orcid ? `https://orcid.org/${orcid}` : null,
+          },
           countries: country ? [country] : [],
         };
       }),

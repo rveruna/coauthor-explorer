@@ -1,4 +1,5 @@
 import { BACKGROUND, LINK_COLOR } from './colors';
+import { initials } from './initials';
 import type { Graph, GraphNode } from './graph';
 import type { SimNode } from './layout';
 import { toScreen, type View } from './view';
@@ -17,6 +18,18 @@ export interface Ctx {
   fill(): void;
   stroke(): void;
   fillText(text: string, x: number, y: number): void;
+  clip(): void;
+  drawImage(
+    image: never,
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
+  ): void;
   measureText(text: string): { width: number };
   strokeText(text: string, x: number, y: number): void;
   fillStyle: string | CanvasGradient | CanvasPattern;
@@ -29,6 +42,19 @@ export interface Ctx {
   lineJoin: CanvasLineJoin;
 }
 
+/** A loaded picture, as much of it as the drawing needs. */
+export interface Picture {
+  naturalWidth: number;
+  naturalHeight: number;
+}
+
+/** The smallest circle, in pixels, that gets initials or a photo; anything smaller is just a dot. */
+const MIN_FACE_RADIUS = 8;
+
+/** More neighbours than this, and only the bigger ones are named. */
+const CROWDED = 14;
+const BIG_NEIGHBOUR = 12;
+
 export interface DrawState {
   graph: Graph;
   nodes: SimNode[];
@@ -39,6 +65,8 @@ export interface DrawState {
   selectedId: string | null;
   hoverId: string | null;
   focusId: string | null;
+  /** Photos that have finished loading, by person. */
+  photos: Map<string, Picture>;
 }
 
 /** The ids of a person and everyone linked to them. */
@@ -53,11 +81,11 @@ export function neighbourhood(graph: Graph, id: string | null): Set<string> {
   return ids;
 }
 
-/** Labels are drawn for big nodes, and for the selected or hovered person and their neighbours when zoomed in. */
+/** Names are drawn for big nodes, and for the chosen or hovered person and their neighbours. Everyone else shows initials. */
 export function shouldLabel(r: number, view: View, emphasised: boolean, dimmed: boolean): boolean {
   if (dimmed) return false;
   if (emphasised) return true;
-  return r * view.k >= 11;
+  return r * view.k >= 16;
 }
 
 const LABEL_HEIGHT = 14;
@@ -94,7 +122,7 @@ export function placeLabels(ctx: Pick<Ctx, 'measureText'>, labels: Label[]): Lab
 }
 
 export function drawGraph(ctx: Ctx, state: DrawState): void {
-  const { graph, nodes, view, width, height, colorOf, selectedId, hoverId, focusId } = state;
+  const { graph, nodes, view, width, height, colorOf, selectedId, hoverId, focusId, photos } = state;
   const active = hoverId ?? selectedId;
   const near = neighbourhood(graph, active);
   const byId = new Map(nodes.map((n) => [n.id, n]));
@@ -135,6 +163,39 @@ export function drawGraph(ctx: Ctx, state: DrawState): void {
     ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
     ctx.fill();
 
+    const photo = photos.get(node.id);
+    if (photo && r >= MIN_FACE_RADIUS) {
+      // a real photo, cropped square towards the top, with a ring in the colour that carries the country or group
+      const side = Math.min(photo.naturalWidth, photo.naturalHeight);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(
+        photo as never,
+        (photo.naturalWidth - side) / 2,
+        (photo.naturalHeight - side) * 0.25,
+        side,
+        side,
+        s.x - r,
+        s.y - r,
+        r * 2,
+        r * 2,
+      );
+      ctx.restore();
+      ctx.strokeStyle = colorOf(node);
+      ctx.lineWidth = Math.max(2, r * 0.12);
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (r >= MIN_FACE_RADIUS) {
+      ctx.fillStyle = BACKGROUND;
+      ctx.font = `600 ${Math.min(16, r * 0.85)}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initials(node.name), s.x, s.y + 1);
+    }
+
     if (node.loaded || node.id === focusId || node.id === selectedId) {
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = node.id === selectedId ? 3.5 : node.id === focusId ? 3 : 2;
@@ -143,7 +204,12 @@ export function drawGraph(ctx: Ctx, state: DrawState): void {
       ctx.stroke();
     }
 
-    const emphasised = near.has(node.id) && active !== null;
+    // when the chosen person is linked to a crowd, only the bigger neighbours are named, or the names pile up
+    const crowded = near.size > CROWDED;
+    const emphasised =
+      near.has(node.id) &&
+      active !== null &&
+      (!crowded || node.id === active || sim.r * view.k >= BIG_NEIGHBOUR);
     if (shouldLabel(sim.r, view, emphasised, dimmed)) {
       // the chosen person first, then their neighbours, then the biggest nodes
       const priority = node.id === active ? 3e6 : emphasised ? 2e6 + sim.r : sim.r;

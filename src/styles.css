@@ -419,3 +419,21 @@ footer {
   width: 1.15rem;
   height: 1.15rem;
 }
+
+.portrait {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.portrait img {
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+}
+
+.portrait figcaption {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
