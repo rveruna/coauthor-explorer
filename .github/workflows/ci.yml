@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build
+      - run: npm run test:coverage
+      - name: Bundle size budget
+        run: npm run size
+      - name: Lighthouse scores (starting screen, no calls to OpenAlex)
+        run: npm run perf:lighthouse -- --runs 3 --label ci --min-score 90 --min-quality 95
