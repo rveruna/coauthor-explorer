@@ -1,0 +1,33 @@
+{
+  "savedAt": "2026-10-15",
+  "people": [
+    {
+      "id": "A5108093963",
+      "name": "Geoffrey E. Hinton"
+    },
+    {
+      "id": "A5086198262",
+      "name": "Yoshua Bengio"
+    },
+    {
+      "id": "A5100450462",
+      "name": "Li Fei-Fei"
+    },
+    {
+      "id": "A5067184382",
+      "name": "Jennifer A. Doudna"
+    },
+    {
+      "id": "A5005349213",
+      "name": "Demis Hassabis"
+    },
+    {
+      "id": "A5030598859",
+      "name": "Katalin Karikó"
+    },
+    {
+      "id": "A5025908133",
+      "name": "Tim Berners‐Lee"
+    }
+  ]
+}
