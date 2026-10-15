@@ -23,6 +23,8 @@ It is an independent project and is not affiliated with OpenAlex.
 - Filters by year range, ignores papers with huge author lists (adjustable, because they link everyone to everyone) and
   caps how many people are shown
 - Colours people by country, or by **group**: circles of collaborators found automatically from who writes with whom
+- Shows a real photo for people who have one (matched exactly by ORCID iD from Wikidata and Wikimedia Commons, with a credit
+  link) and initials for everyone else. It never uses stand-in faces
 - Shows a details panel (institution, totals from OpenAlex, links to their OpenAlex and ORCID pages, the papers they share
   with the starting person)
 - Keeps every choice in the URL, so a link reproduces the view and the back button works
@@ -34,7 +36,7 @@ It is an independent project and is not affiliated with OpenAlex.
 ```bash
 npm install
 npm run dev
-npm test               # 262 tests
+npm test               # 307 tests
 npm run test:coverage
 npm run build
 npm run lint
@@ -80,12 +82,13 @@ A picture of a network cannot be read by a screen reader, so the picture is not 
 
 ## Practices
 
-- **Tests:** 262 (Vitest, Testing Library, MSW for the network). Coverage is about 98% of statements and 94% of branches.
+- **Tests:** 307 (Vitest, Testing Library, MSW for the network). Coverage is about 98% of statements and 94% of branches.
   They include the real-data shapes below, pointer and keyboard use of the canvas, search with the combobox keys,
   falling back to saved copies, and a check that every saved copy has the expected shape.
-- **Mutation check:** I made 24 deliberate changes to the graph builder, groups, colours, viewport, settings, schema,
-  drawing and fallback logic. The first run missed 3 (a tie-break in group finding, label priority when names collide, and
-  which person the table compares against), so I wrote tests for them, and now all 24 are caught. The script is a one-off
+- **Mutation check:** I made 32 deliberate changes to the graph builder, groups, colours, viewport, settings, schema,
+  drawing, photo matching and fallback logic. The first runs missed 5 (a tie-break in group finding, label priority when
+  names collide, which person the table compares against, the check that a photo address is a Commons file, and the cap on
+  how many people are looked up for photos), so I wrote tests for them, and now all 32 are caught. The script is a one-off
   and is not in the repo.
 - **Bugs found while building, in my own work:**
   - Real OpenAlex data has credits with no author id (5 to 47 of a researcher's 100 papers). The first schema rejected the
@@ -111,6 +114,9 @@ A picture of a network cannot be read by a screen reader, so the picture is not 
   their terms before reusing them.
 - **Author matching is automatic and imperfect.** OpenAlex sometimes merges or splits people, for example one well-known
   researcher has three profiles, and the app uses the one with the most works.
+- **Photos are rare.** About 1 in 8 of the people shown had one in the networks I tried, because Wikidata has photos only
+  for notable researchers and a person needs an ORCID iD to be matched. Everyone else shows initials. Each photo's author
+  and licence are on its Commons page, which the details panel links to.
 - **Only the 100 most cited papers** of each researcher are loaded, so "papers" means papers in that sample, and recent or
   less cited work is under-represented. Loading more would mean paging and more requests.
 - **Groups are a guide.** Label propagation is quick and simple, not the best community-finding method, and the groups
