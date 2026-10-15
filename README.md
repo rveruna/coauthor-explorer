@@ -5,6 +5,8 @@
 
 **[Live demo](https://rveruna.github.io/coauthor-explorer/)** (uses live data from OpenAlex)
 
+[![Jennifer Doudna's co-author network settling into place, being dragged around, then recoloured by group of collaborators](docs/demo.gif)](https://rveruna.github.io/coauthor-explorer/)
+
 Search for any researcher and see who they write papers with as a live, draggable network. Double-click a collaborator
 to load _their_ collaborators into the same picture. Narrow the years to watch collaborations appear and disappear.
 Switch to colouring by group and the network pulls apart into circles of people who write together.
