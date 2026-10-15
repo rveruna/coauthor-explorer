@@ -212,10 +212,12 @@ export default function App() {
         <p>
           Data from <a href="https://openalex.org">OpenAlex</a>, an open index of research. Real photos, where
           there is one, come from Wikimedia Commons through Wikidata and are matched by ORCID iD, never by
-          name. Everyone else has an illustrated avatar made from their id, which is not their real face (the
-          Notionists style by Zoish, CC0, drawn in your browser with DiceBear). This is an independent
-          project, not affiliated with OpenAlex. Researchers are identified by OpenAlex’s automatic author
-          matching, which sometimes merges or splits people, so treat the network as a guide, not a record.
+          name. Everyone else has an illustrated avatar made from their id, which is not their real face
+          (Personas by <a href="https://personas.draftbit.com/">Draftbit</a>,{' '}
+          <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, drawn in your browser with{' '}
+          <a href="https://www.dicebear.com/">DiceBear</a>). This is an independent project, not affiliated
+          with OpenAlex. Researchers are identified by OpenAlex’s automatic author matching, which sometimes
+          merges or splits people, so treat the network as a guide, not a record.
         </p>
       </footer>
     </>
