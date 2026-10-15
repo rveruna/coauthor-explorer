@@ -28,7 +28,7 @@
     "*.{json,css,html,mjs,js,yml,md}": "prettier --write"
   },
   "dependencies": {
-    "@dicebear/core": "^9.4.3",
+    "@dicebear/core": "^10.7.0",
     "@dicebear/personas": "^9.4.2",
     "@tanstack/react-query": "^5.104.3",
     "d3-force": "^3.0.0",
