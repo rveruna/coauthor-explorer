@@ -755,6 +755,14 @@ describe('illustrated avatars', () => {
     expect(
       screen.getByText(/illustrated avatar made from their id, which is not their real face/),
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Draftbit' })).toHaveAttribute(
+      'href',
+      'https://personas.draftbit.com/',
+    );
+    expect(screen.getByRole('link', { name: 'CC BY 4.0' })).toHaveAttribute(
+      'href',
+      'https://creativecommons.org/licenses/by/4.0/',
+    );
   });
 
   it('needs no request to make them', async () => {
