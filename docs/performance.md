@@ -15,7 +15,7 @@ the API.
 | Page weight                        | 122 kB (scripts 118 kB) |
 
 `npm run size` fails the build if the gzipped JavaScript that the page loads up front passes 130 kB or the CSS passes
-3 kB. Today's figures are 122.3 kB and 1.7 kB. Everything else is loaded later and not counted: the seven saved copies of
+3 kB. Today's figures are 122.8 kB and 1.7 kB. Everything else is loaded later and not counted: the seven saved copies of
 researchers' data (108 kB gzipped in total, only when OpenAlex cannot be reached) and the avatar library (about 11 kB, once a
 network is first shown).
 

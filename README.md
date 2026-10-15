@@ -30,7 +30,7 @@ It is an independent project and is not affiliated with OpenAlex.
   a stand-in photograph on a real person
 - Shows a details panel (institution, totals from OpenAlex, links to their OpenAlex and ORCID pages, the papers they share
   with the starting person)
-- Keeps every choice in the URL, so a link reproduces the view and the back button works
+- Keeps every choice in the URL, so a link reproduces the view, and the back button returns to the previous researcher
 - Falls back to saved copies of real data for seven featured researchers when OpenAlex cannot be reached or its free daily
   limit has been used, and says so on the page
 
@@ -85,7 +85,7 @@ A picture of a network cannot be read by a screen reader, so the picture is not 
 
 ## Practices
 
-- **Tests:** 336 (Vitest, Testing Library, MSW for the network). Coverage is about 98% of statements and 94% of branches.
+- **Tests:** 336 (Vitest, Testing Library, MSW for the network). Coverage is about 98% of statements and 95% of branches.
   They include the real-data shapes below, pointer and keyboard use of the canvas, search with the combobox keys,
   falling back to saved copies, and a check that every saved copy has the expected shape.
 - **Mutation check:** I made 38 deliberate changes to the graph builder, groups, colours, viewport, settings, schema,
@@ -105,7 +105,7 @@ A picture of a network cannot be read by a screen reader, so the picture is not 
   coverage, a bundle budget and Lighthouse with minimum scores. A pre-commit hook formats and lints staged files.
   Dependabot and CodeQL are on.
 - **Performance:** [docs/performance.md](docs/performance.md). Lighthouse gives 99, 100, 100, 100 on simulated Slow 4G
-  at the starting screen, with 120 kB of JavaScript.
+  at the starting screen, with 123 kB of JavaScript up front.
 
 ## Limits and what I would improve
 
