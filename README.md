@@ -37,7 +37,7 @@ It is an independent project and is not affiliated with OpenAlex.
 ```bash
 npm install
 npm run dev
-npm test               # 323 tests
+npm test               # 336 tests
 npm run test:coverage
 npm run build
 npm run lint
@@ -83,7 +83,7 @@ A picture of a network cannot be read by a screen reader, so the picture is not 
 
 ## Practices
 
-- **Tests:** 323 (Vitest, Testing Library, MSW for the network). Coverage is about 98% of statements and 94% of branches.
+- **Tests:** 336 (Vitest, Testing Library, MSW for the network). Coverage is about 98% of statements and 94% of branches.
   They include the real-data shapes below, pointer and keyboard use of the canvas, search with the combobox keys,
   falling back to saved copies, and a check that every saved copy has the expected shape.
 - **Mutation check:** I made 38 deliberate changes to the graph builder, groups, colours, viewport, settings, schema,
@@ -119,7 +119,7 @@ A picture of a network cannot be read by a screen reader, so the picture is not 
   for notable researchers and a person needs an ORCID iD to be matched. Everyone else shows an illustrated avatar, which
   is not their face and is labelled as such. Each real photo's author and licence are on its Commons page, which the details
   panel links to.
-- **The avatar library is about 117 kB gzipped**, loaded once a network is first shown. It is not in the up-front budget.
+- **The avatar library is about 11 kB gzipped**, loaded once a network is first shown. It is not in the up-front budget.
 - **Only the 100 most cited papers** of each researcher are loaded, so "papers" means papers in that sample, and recent or
   less cited work is under-represented. Loading more would mean paging and more requests.
 - **Groups are a guide.** Label propagation is quick and simple, not the best community-finding method, and the groups
