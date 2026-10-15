@@ -28,7 +28,7 @@ function setup(overrides: Partial<React.ComponentProps<typeof GraphCanvas>> = {}
     fitKey: 'a',
     colorOf: () => '#56b4e9',
     anchors: null,
-    photos: new Map<string, string>(),
+    faces: new Map<string, string>(),
     reducedMotion: true,
     onSelect: vi.fn(),
     onExpand: vi.fn(),
@@ -220,7 +220,7 @@ describe('GraphCanvas keyboard use', () => {
   });
 });
 
-describe('GraphCanvas photos', () => {
+describe('GraphCanvas faces', () => {
   /** A canvas that records the photos drawn on it. */
   function recordingCanvas() {
     const drawn: unknown[] = [];
@@ -269,7 +269,7 @@ describe('GraphCanvas photos', () => {
 
   it('fetches each photo once and without sending the page address', () => {
     const made = fakeImages();
-    setup({ photos: new Map([['a', 'https://x.example/a.jpg']]) });
+    setup({ faces: new Map([['a', 'https://x.example/a.jpg']]) });
 
     expect(made).toHaveLength(1);
     expect(made[0]!.src).toBe('https://x.example/a.jpg');
@@ -279,9 +279,9 @@ describe('GraphCanvas photos', () => {
   it('does not fetch the same photo twice', () => {
     const made = fakeImages();
     const photos = new Map([['a', 'https://x.example/a.jpg']]);
-    const { props, rerender } = setup({ photos });
+    const { props, rerender } = setup({ faces: photos });
 
-    rerender(<GraphCanvas {...props} photos={new Map(photos)} />);
+    rerender(<GraphCanvas {...props} faces={new Map(photos)} />);
 
     expect(made).toHaveLength(1);
   });
@@ -289,7 +289,7 @@ describe('GraphCanvas photos', () => {
   it('draws a photo only once it has arrived', async () => {
     const drawn = recordingCanvas();
     const made = fakeImages();
-    setup({ photos: new Map([['a', 'https://x.example/a.jpg']]) });
+    setup({ faces: new Map([['a', 'https://x.example/a.jpg']]) });
     await new Promise((r) => requestAnimationFrame(r));
     expect(drawn).toHaveLength(0);
 
@@ -303,7 +303,7 @@ describe('GraphCanvas photos', () => {
   it('never draws a photo that failed to load', async () => {
     const drawn = recordingCanvas();
     const made = fakeImages();
-    setup({ photos: new Map([['a', 'https://x.example/a.jpg']]) });
+    setup({ faces: new Map([['a', 'https://x.example/a.jpg']]) });
 
     Object.assign(made[0]!, { complete: true, naturalWidth: 0 });
     made[0]!.onload!();

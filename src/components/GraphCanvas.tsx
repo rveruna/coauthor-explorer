@@ -21,8 +21,8 @@ interface Props {
   colorOf: (node: GraphNode) => string;
   /** Where groups are pulled to, or null. */
   anchors: Map<string, { x: number; y: number }> | null;
-  /** Photo addresses by person. People without one show their initials. */
-  photos: Map<string, string>;
+  /** Face pictures by person: a real photo, or an illustrated avatar. People without one show their initials. */
+  faces: Map<string, string>;
   reducedMotion: boolean;
   onSelect: (id: string | null) => void;
   onExpand: (id: string) => void;
@@ -31,10 +31,10 @@ interface Props {
 
 const MOVE_THRESHOLD = 4;
 
-/** The photos that have finished loading, by person. */
-function loadedPhotos(photos: Map<string, string>, images: Map<string, HTMLImageElement>) {
+/** The face pictures that have finished loading, by person. */
+function loadedPhotos(faces: Map<string, string>, images: Map<string, HTMLImageElement>) {
   const loaded = new Map<string, HTMLImageElement>();
-  for (const [id, url] of photos) {
+  for (const [id, url] of faces) {
     const image = images.get(url);
     if (image?.complete && image.naturalWidth > 0) loaded.set(id, image);
   }
@@ -52,7 +52,7 @@ export function GraphCanvas({
   fitKey,
   colorOf,
   anchors,
-  photos,
+  faces,
   reducedMotion,
   onSelect,
   onExpand,
@@ -73,10 +73,10 @@ export function GraphCanvas({
     moved: boolean;
   } | null>(null);
   const images = useRef(new Map<string, HTMLImageElement>());
-  const latest = useRef({ graph, selectedId, focusId, colorOf, photos });
+  const latest = useRef({ graph, selectedId, focusId, colorOf, faces });
   // drawing happens outside React's render, so it reads the latest props from here
   useLayoutEffect(() => {
-    latest.current = { graph, selectedId, focusId, colorOf, photos };
+    latest.current = { graph, selectedId, focusId, colorOf, faces };
   });
 
   const draw = useCallback(() => {
@@ -97,7 +97,7 @@ export function GraphCanvas({
       selectedId: latest.current.selectedId,
       hoverId: hoverRef.current,
       focusId: latest.current.focusId,
-      photos: loadedPhotos(latest.current.photos, images.current),
+      photos: loadedPhotos(latest.current.faces, images.current),
     });
   }, []);
 
@@ -150,9 +150,9 @@ export function GraphCanvas({
     schedule();
   }, [selectedId, focusId, colorOf, schedule]);
 
-  // fetch each photo once, and redraw when it arrives; one that fails to load is simply never drawn
+  // fetch each face once, and redraw when it arrives; one that fails to load is simply never drawn
   useEffect(() => {
-    for (const url of photos.values()) {
+    for (const url of faces.values()) {
       if (images.current.has(url)) continue;
       const image = new Image();
       image.referrerPolicy = 'no-referrer';
@@ -161,7 +161,7 @@ export function GraphCanvas({
       images.current.set(url, image);
     }
     schedule();
-  }, [photos, schedule]);
+  }, [faces, schedule]);
 
   // keep the canvas sharp at any size and pixel density
   useEffect(() => {

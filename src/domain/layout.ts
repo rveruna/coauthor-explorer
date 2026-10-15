@@ -32,7 +32,7 @@ const ANCHOR_STRENGTH = 0.09;
 
 /** A node's radius in world units: bigger for people on more papers, within limits. */
 export function radiusFor(papers: number): number {
-  return Math.min(24, 5 + 3 * Math.sqrt(Math.max(papers, 1)));
+  return Math.min(28, 10 + 3 * Math.sqrt(Math.max(papers, 1)));
 }
 
 /** A repeatable pseudo-random number from a string, so the same person always starts in the same place. */

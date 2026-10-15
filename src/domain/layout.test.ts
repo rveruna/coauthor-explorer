@@ -15,7 +15,7 @@ describe('radiusFor', () => {
   });
 
   it('is capped, and never below the size for one paper', () => {
-    expect(radiusFor(100000)).toBe(24);
+    expect(radiusFor(100000)).toBe(28);
     expect(radiusFor(0)).toBe(radiusFor(1));
   });
 });
