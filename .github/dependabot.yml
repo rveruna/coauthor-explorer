@@ -10,6 +10,10 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@eslint/js'
         update-types: ['version-update:semver-major']
+      # DiceBear 10 moves styles to @dicebear/styles and always bundles a schema validator, which triples the avatar
+      # code (about 11 kB to 33 kB gzipped) for no visible change. 9 is an LTS line, so the avatars stay on it.
+      - dependency-name: '@dicebear/*'
+        update-types: ['version-update:semver-major']
     open-pull-requests-limit: 5
     groups:
       production:
