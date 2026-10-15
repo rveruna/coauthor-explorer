@@ -4,6 +4,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # eslint-plugin-jsx-a11y does not support ESLint 10 yet, so a PR that bumps ESLint to 10 cannot install
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@eslint/js'
+        update-types: ['version-update:semver-major']
     open-pull-requests-limit: 5
     groups:
       production:
