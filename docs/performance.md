@@ -14,9 +14,10 @@ the API.
 | Layout shift                       | 0                       |
 | Page weight                        | 122 kB (scripts 118 kB) |
 
-`npm run size` fails the build if the gzipped JavaScript that every visitor downloads passes 130 kB or the CSS passes
-3 kB. Today's figures are 120.4 kB and 1.6 kB. The seven saved copies of researchers' data (108 kB gzipped in total) are
-separate files, loaded only when OpenAlex cannot be reached, and are not counted.
+`npm run size` fails the build if the gzipped JavaScript that the page loads up front passes 130 kB or the CSS passes
+3 kB. Today's figures are 122.3 kB and 1.7 kB. Everything else is loaded later and not counted: the seven saved copies of
+researchers' data (108 kB gzipped in total, only when OpenAlex cannot be reached) and the avatar library (about 117 kB, once a
+network is first shown).
 
 Not measured: how it behaves with the network drawn and the layout running (Lighthouse does not exercise that), the
 speed of OpenAlex itself, or a real phone.
